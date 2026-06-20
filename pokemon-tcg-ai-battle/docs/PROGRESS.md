@@ -4,8 +4,8 @@
 > **各コミットの直後にこのファイルを更新する**。再開時はまずこのファイルを読むこと。
 
 最終更新: 2026-06-20 / 作業ブランチ: `claude/nifty-albattani-4mgg7m`
-**現在地**: Sprint 0A・0B ＋ 可視化インフラ 完了（Sprint 0 ゲート PASS、`docs/sprint_reports/sprint0_gate.md`）。
-Playwright ブラウザ目視のみ環境制約で保留（chromium が egress 403）。次は **Sprint 1（高速自己対戦基盤）**。
+**現在地**: Sprint 0（0A/0B/可視化）＋ **Sprint 1（高速自己対戦基盤）完了**。
+Playwright ブラウザ目視のみ環境制約で保留（chromium が egress 403）。次は **Sprint 2（決定化探索 PIMC→ISMCTS）**。
 
 ---
 
@@ -70,8 +70,18 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 - [x] スプリント末ゲート（Auto 100、クラッシュ0/リーク0）→ HTTP自動ゲートで **PASS**
 - [x] コミット＆プッシュ
 
-### Sprint 1〜3
-- [ ] 未着手（`docs/PLAN_v1.2.md` §6 / `PLAN_v1.1.md` を参照）
+### Sprint 1 — 高速自己対戦基盤 ✅ 完了
+- [x] `model/features.py`: `featurize(obs)` → 固定長 float32（FEATURE_DIM=37）
+- [x] `selfplay/replay_buffer.py`: ReplayBuffer（add/sample/save/load・z 算出）
+- [x] `selfplay/actor.py`: `collect_game` ＋ `parallel_selfplay`（spawn 並列・worker 再生成）
+- [x] `eval/cabt_eval.py`: 席交代の head-to-head 勝率評価
+- [x] `tests/test_selfplay.py`: 5/5 PASS。並列40ゲーム crashes=0、単コア ~113 games/sec
+- [x] コミット＆プッシュ
+
+### Sprint 2〜3
+- [ ] Sprint 2: 決定化探索（`agent/determinize.py`・`agent/mcts.py`・`agent/time_budget.py`）
+- [ ] Sprint 3: 学習＋リーグ（`selfplay/learner.py`・`model/network.py`・`league/`）
+- 参照: `docs/PLAN_v1.2.md` §6 / `PLAN_v1.1.md`
 
 ---
 
