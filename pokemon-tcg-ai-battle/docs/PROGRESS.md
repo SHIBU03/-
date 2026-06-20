@@ -4,7 +4,7 @@
 > **各コミットの直後にこのファイルを更新する**。再開時はまずこのファイルを読むこと。
 
 最終更新: 2026-06-20 / 作業ブランチ: `claude/nifty-albattani-4mgg7m`
-**現在地**: Sprint 0A 完了（テスト 6/6 PASS）。次は Sprint 0B（公式ランナー＋提出パイプライン）。
+**現在地**: Sprint 0A・0B 完了。次は **可視化インフラ（viz + Playwright MCP）**。
 
 ---
 
@@ -50,13 +50,14 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 - [x] テスト全 PASS（6/6・クラッシュ 0・リーク 0）
 - [x] コミット＆プッシュ
 
-### Sprint 0B — 公式ランナー確保＋提出パイプライン
-- [ ] `kaggle-environments==1.30.1` 導入試行 ＋ `make("cabt")` 可否確認（不可なら代替明記）
-- [ ] `requirements.lock`
-- [ ] `tools/validate_deck.py`（60枚・cardId存在・4枚制限・ACE SPEC）
-- [ ] `tools/make_submission.sh`（main.py+deck.csv+agent/+cg/ を tar）
-- [ ] 提出スモークテスト（展開→1ゲーム完走）
-- [ ] コミット＆プッシュ
+### Sprint 0B — 公式ランナー確保＋提出パイプライン ✅ 完了
+- [x] `kaggle-environments==1.30.1` 導入（`--ignore-installed blinker`）。**`make("cabt")` は同梱で利用可**（別途 DL 不要）
+- [x] `env/kaggle_runner.py`（make("cabt")+env.run ラッパー、1ゲーム完走確認）
+- [x] `requirements.lock`
+- [x] `tools/validate_deck.py`（60枚・cardId存在・4枚制限・ACE SPEC）→ 既存デッキ VALID
+- [x] `tools/make_submission.sh`（main.py+deck.csv+agent/+cg/ を tar、`__pycache__` 除外）
+- [x] `tools/smoke_submission.py`（展開→自己完結で1ゲーム完走）→ SMOKE PASS
+- [x] コミット＆プッシュ
 
 ### 可視化インフラ（0A/0B 共通）
 - [ ] `viz/server.py`（start/step/auto/metrics）
@@ -83,5 +84,5 @@ bash tools/make_submission.sh       # 提出物作成（実装後）
 
 ## 4. 既知の事実（再掲）
 - クラッシュ根因: `cg/game.py:battle_finish()` が `Battle.battle_ptr` を戻さず、ネイティブが NULL/解放済みを無防備に参照 → use-after-free/double-free/segfault。対策＝`BattleSession` で alive ガード。
-- `kaggle_environments` 未導入。`make("cabt")` は競技専用環境で pip だけでは入らない可能性。
+- `kaggle-environments==1.30.1` を導入すれば **`make("cabt")` は同梱で利用可**（要 `--ignore-installed blinker`）。cabt 環境はエージェントの最初の行動で 60 枚デッキを受け取り、報酬は win=1/lose=-1/draw=0、各プレイヤー 600 秒の overage。
 - 並列はプロセス分離必須（`battle_ptr`/`agent_ptr` はプロセス共有シングルトン）。
