@@ -4,7 +4,8 @@
 > **各コミットの直後にこのファイルを更新する**。再開時はまずこのファイルを読むこと。
 
 最終更新: 2026-06-20 / 作業ブランチ: `claude/nifty-albattani-4mgg7m`
-**現在地**: Sprint 0A・0B 完了。次は **可視化インフラ（viz + Playwright MCP）**。
+**現在地**: Sprint 0A・0B ＋ 可視化インフラ 完了（Sprint 0 ゲート PASS、`docs/sprint_reports/sprint0_gate.md`）。
+Playwright ブラウザ目視のみ環境制約で保留（chromium が egress 403）。次は **Sprint 1（高速自己対戦基盤）**。
 
 ---
 
@@ -59,14 +60,15 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 - [x] `tools/smoke_submission.py`（展開→自己完結で1ゲーム完走）→ SMOKE PASS
 - [x] コミット＆プッシュ
 
-### 可視化インフラ（0A/0B 共通）
-- [ ] `viz/server.py`（start/step/auto/metrics）
-- [ ] `viz/index.html` + `app.js` + `style.css`（盤面・操作・計測）
-- [ ] `tools/run_viz.sh`
-- [ ] `.mcp.json`（Playwright MCP）
-- [ ] Playwright MCP 接続 ＋ chromium 導入（ネットワークポリシー許可が前提）
-- [ ] スプリント末ゲート（Auto 100、クラッシュ0/リーク0 を確認）
-- [ ] コミット＆プッシュ
+### 可視化インフラ（0A/0B 共通）✅ 完了（Playwright目視のみ保留）
+- [x] `viz/server.py`（start/step/auto/metrics、BattleSession 経由）
+- [x] `viz/index.html` + `app.js` + `style.css`（盤面・操作・計測パネル）
+- [x] `tools/run_viz.sh` / `tools/viz_gate.py`（自動ゲート）
+- [x] `.mcp.json`（Playwright MCP 設定、`@playwright/mcp` 起動確認済み）
+- [~] Playwright MCP 接続 ＋ chromium 導入 → **保留**: chromium DL が egress 403
+      （`cdn.playwright.dev` 非許可）＋ MCP は要セッション再起動。手順は sprint0_gate.md。
+- [x] スプリント末ゲート（Auto 100、クラッシュ0/リーク0）→ HTTP自動ゲートで **PASS**
+- [x] コミット＆プッシュ
 
 ### Sprint 1〜3
 - [ ] 未着手（`docs/PLAN_v1.2.md` §6 / `PLAN_v1.1.md` を参照）

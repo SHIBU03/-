@@ -1,0 +1,23 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin: 16px; background: #0f1115; color: #e6e6e6; }
+h1 { font-size: 20px; margin: 0 0 12px; }
+h1 .sub { font-size: 12px; color: #8aa; font-weight: normal; }
+h2 { font-size: 14px; margin: 0 0 6px; color: #9cf; }
+h3 { font-size: 13px; margin: 0 0 6px; color: #fc9; }
+.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.controls .gap { width: 16px; }
+button { background: #2a3550; color: #fff; border: 1px solid #44557a; border-radius: 6px;
+         padding: 6px 12px; cursor: pointer; }
+button:hover { background: #38456a; }
+input, select { background: #1a1e27; color: #e6e6e6; border: 1px solid #333; border-radius: 4px;
+                padding: 4px; width: 72px; }
+.metrics { background: #161a22; border: 1px solid #283; border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+.metrics .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 13px; }
+.metrics b { color: #6f6; }
+.board { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.player { background: #161a22; border: 1px solid #333; border-radius: 8px; padding: 10px; }
+.midline { text-align: center; color: #ccc; font-size: 13px; padding: 4px; }
+.row { font-size: 13px; padding: 2px 0; color: #cdd; }
+.lower { display: flex; gap: 12px; }
+.lower > div { flex: 1; background: #161a22; border: 1px solid #333; border-radius: 8px; padding: 10px; }
+pre { white-space: pre-wrap; word-break: break-word; font-size: 12px; margin: 0; max-height: 260px; overflow: auto; color: #bcd; }

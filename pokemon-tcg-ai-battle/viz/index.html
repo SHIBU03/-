@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ポケカ 仮想空間ビジュアライザ</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <h1>ポケカ AI 仮想空間ビジュアライザ <span class="sub">cabt self-play</span></h1>
+
+  <section class="controls">
+    <label>seed <input id="seed" type="number" value="0" /></label>
+    <label>agent
+      <select id="agent"><option value="main">main</option><option value="random">random</option></select>
+    </label>
+    <button id="btn-start">Start</button>
+    <button id="btn-step">Step</button>
+    <button id="btn-auto-step">Auto-step ▶</button>
+    <span class="gap"></span>
+    <label>N <input id="ngames" type="number" value="100" /></label>
+    <button id="btn-auto">Auto N games</button>
+  </section>
+
+  <section class="metrics" id="metrics">
+    <h2>メトリクス</h2>
+    <div class="grid">
+      <div>running <b id="m-running" data-testid="m-running">false</b></div>
+      <div>games <b id="m-games" data-testid="m-games">0</b></div>
+      <div>finished <b id="m-finished" data-testid="m-finished">0</b></div>
+      <div>crashes <b id="m-crashes" data-testid="m-crashes">0</b></div>
+      <div>p0/p1/draw <b id="m-results">0/0/0</b></div>
+      <div>max move ms <b id="m-move">0</b></div>
+      <div>RSS start/now MB <b id="m-rss">-/-</b></div>
+      <div>elapsed s <b id="m-elapsed">0</b></div>
+    </div>
+  </section>
+
+  <section class="board">
+    <div class="player" id="p1">
+      <h3>Player 1 (opponent)</h3>
+      <div class="row" id="p1-active">active: -</div>
+      <div class="row" id="p1-bench">bench: -</div>
+      <div class="row" id="p1-info">hand/prize/deck/discard: -</div>
+    </div>
+    <div class="midline" id="turninfo">turn - / yourIndex - / result -</div>
+    <div class="player" id="p0">
+      <h3>Player 0 (you)</h3>
+      <div class="row" id="p0-active">active: -</div>
+      <div class="row" id="p0-bench">bench: -</div>
+      <div class="row" id="p0-info">hand/prize/deck/discard: -</div>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="select-panel"><h2>Select</h2><pre id="select">-</pre></div>
+    <div class="log-panel"><h2>Logs</h2><pre id="logs">-</pre></div>
+  </section>
+
+  <script src="/app.js"></script>
+</body>
+</html>
