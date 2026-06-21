@@ -110,6 +110,11 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 
 ---
 
+## 2.5 対局を見る（ブラウザ不要・MCP代替）
+- `python3 tools/record_game.py game_replay.html <seed>` → 実戦を録画した自己完結HTMLを生成。
+  ブラウザで開くと1手ずつ/自動再生で対戦を観戦できる（Playwright MCP のブラウザ目視が
+  egress 制約で不可なための代替。MCP 自体は接続済み）。
+
 ## 3. よく使うコマンド
 
 ```bash

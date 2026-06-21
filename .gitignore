@@ -10,3 +10,5 @@ venv/
 
 # Build / submission artifacts
 submission.tar.gz
+game_replay.html
+*_replay.html
