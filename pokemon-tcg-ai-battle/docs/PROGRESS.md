@@ -110,10 +110,13 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 
 ---
 
-## 2.5 対局を見る（ブラウザ不要・MCP代替）
-- `python3 tools/record_game.py game_replay.html <seed>` → 実戦を録画した自己完結HTMLを生成。
-  ブラウザで開くと1手ずつ/自動再生で対戦を観戦できる（Playwright MCP のブラウザ目視が
-  egress 制約で不可なための代替。MCP 自体は接続済み）。
+## 2.5 対局を見る
+- **ローカルで Playwright MCP ライブ観戦**: `docs/LOCAL_VIZ.md` 参照
+  （clone → `bash tools/run_viz.sh` → `npx playwright install chromium` → MCP で :8000 を開く。
+  Linux/Windows x64 前提。mac は WSL/Docker か下記HTML）。
+- **ブラウザ不要の観戦用HTML**: `python3 tools/record_game.py game_replay.html <seed>` →
+  生成HTMLをブラウザで開く（1手ずつ/自動再生）。クラウド環境はブラウザ取得が egress 不可なため
+  これが既定の観戦手段（Playwright MCP 自体は接続済み）。
 
 ## 3. よく使うコマンド
 
