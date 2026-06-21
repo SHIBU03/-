@@ -28,12 +28,17 @@ turn=2, yourIndex=0, result=-1（進行中）。カード名解決つきで描�
 
 → ビジュアライザの盤面・手札・サイド・デッキ・状態異常の描画が正常。
 
-## Playwright MCP ブラウザ目視 — この環境では未実行（環境制約）
+## Playwright MCP ブラウザ目視 — 接続済み・ブラウザ取得のみ環境制約
 
-- `@playwright/mcp@latest` はDL・起動可（`--help` 確認済み）。`.mcp.json` 追加済み。
-- **chromium のダウンロードがネットワークegressで 403**:
-  `Host not in allowlist: cdn.playwright.dev`（計画 §5.3 で想定したリスク）。
-- また Playwright MCP ツールを Claude に認識させるには **セッション再起動で `.mcp.json` を読込**む必要がある（実行中セッションには反映されない）。
+切り分け結果（後日セッションで実機確認）:
+- **Playwright MCP は Claude に接続済み**（`mcp__playwright__*` ツール利用可）。`.mcp.json` が読込まれた。
+- `mcp__playwright__browser_navigate("http://127.0.0.1:8022")` を実行 →
+  エラー `Browser "chrome-for-testing" is not installed`。
+- ブラウザ導入を再試行（`npx @playwright/mcp install-browser chrome-for-testing` /
+  `npx playwright install chromium`）→ いずれも **egress 403**:
+  `Host not in allowlist: cdn.playwright.dev`。
+- 結論: **唯一の不足はブラウザ・バイナリのダウンロード**（MCP 接続・サーバ・操作系は揃っている）。
+  計画 §5.3 で想定したリスクそのもの。
 
 ### ブラウザ目視を有効化する手順（次回 or ローカル）
 1. ネットワークegress設定で `cdn.playwright.dev`（と `*.playwright.dev`）を許可、
