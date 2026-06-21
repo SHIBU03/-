@@ -83,7 +83,7 @@ def _ucb_select(visits, values, c: float) -> int:
 
 
 def search_action(obs_dict, *, pool, rng, base_agent, deadline_s=0.15,
-                  max_sims=48, c=1.2):
+                  max_sims=48, c=1.2, value_fn=None):
     sel = obs_dict.get("select")
     if not sel or not (sel.get("minCount") == 1 and sel.get("maxCount") == 1):
         return base_agent(obs_dict)
@@ -117,7 +117,11 @@ def search_action(obs_dict, *, pool, rng, base_agent, deadline_s=0.15,
                     break
                 ss = search_step(sid, _rollout_action(ss.observation, rng))
                 depth += 1
-            v = heuristic_value(ss.observation, root_player)
+            leaf_cur = ss.observation.current
+            if value_fn is not None and leaf_cur is not None and leaf_cur.result == -1:
+                v = value_fn(ss.observation, root_player)   # NN value at non-terminal leaf
+            else:
+                v = heuristic_value(ss.observation, root_player)
         except Exception:
             v = None
             if sid is None:
@@ -145,8 +149,13 @@ def search_action(obs_dict, *, pool, rng, base_agent, deadline_s=0.15,
 
 
 def make_mcts_agent(pool=None, *, deadline_s=0.15, max_sims=48, base_agent=None,
-                    seed=None, use_global_budget=False):
-    """Return an agent(obs_dict)->list[int] backed by determinized search."""
+                    seed=None, use_global_budget=False, value_fn=None):
+    """Return an agent(obs_dict)->list[int] backed by determinized search.
+
+    ``value_fn(observation, root_player)->float`` optionally replaces the
+    heuristic leaf evaluation (e.g. a learned value network). Default None keeps
+    the bundle-safe heuristic.
+    """
     pool = pool or read_deck()
     base_agent = base_agent or random_agent
     rng = random.Random(seed)
@@ -158,7 +167,7 @@ def make_mcts_agent(pool=None, *, deadline_s=0.15, max_sims=48, base_agent=None,
             if use_global_budget:
                 dl = max(0.02, min(deadline_s, GLOBAL.move_deadline(cap_s=deadline_s)))
             action = search_action(obs_dict, pool=pool, rng=rng, base_agent=base_agent,
-                                   deadline_s=dl, max_sims=max_sims)
+                                   deadline_s=dl, max_sims=max_sims, value_fn=value_fn)
             if use_global_budget:
                 GLOBAL.record(time.monotonic() - t0)
             return action

@@ -4,9 +4,12 @@
 > **各コミットの直後にこのファイルを更新する**。再開時はまずこのファイルを読むこと。
 
 最終更新: 2026-06-20 / 作業ブランチ: `claude/nifty-albattani-4mgg7m`
-**現在地**: Sprint 0（0A/0B/可視化）＋ Sprint 1 ＋ **Sprint 2（決定化探索 PIMC）完了**。
-提出 agent は探索ベース（dev/本番 env 双方で search 動作、対 random ~81%、最大手番 ~93ms）。
-次は **Sprint 3（学習＋リーグ）**。Playwright ブラウザ目視のみ環境制約で保留。
+**現在地**: Sprint 0〜3 すべて完了（仮想空間の5層が一通り動作）。テスト 20/20 PASS。
+提出 agent=決定化探索（dev/本番env で search 動作、対 random ~81%）。value net は self-play から
+学習（val_mse<baseline）し NN誘導MCTS に接続可。リーグ/PFSP 雛形あり。
+Playwright ブラウザ目視のみ環境制約で保留（chromium egress 403）。
+**次の発展**: NN のバンドル安全化（pure-python forward）＋ value-guided 提出、リーグ自己対戦の本格運用、
+本番ラダー A/B（PLAN 方針）。
 
 ---
 
@@ -89,10 +92,21 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 - [x] バグ修正: repo直下 `agent/` 衝突を解消（`sample_submission/agent/` に集約）
 - [x] コミット＆プッシュ
 
-### Sprint 3 — 学習＋リーグ（次）
-- [ ] `model/network.py`（軽量 value/policy）・`selfplay/learner.py`（replay から学習）
-- [ ] `league/`＋PFSP（main/exploiter）、NN で探索の事前確率/葉評価を置換
-- 参照: `docs/PLAN_v1.2.md` §6 / `PLAN_v1.1.md`
+### Sprint 3 — 学習＋リーグ ✅ 完了（コア）
+- [x] `model/network.py`（numpy MLP ValueNet：train/predict/save_json/load_json、手書きBP）
+- [x] `model/features.py`：dict/dataclass 両対応に refactor ＋ `featurize_search_obs`
+- [x] `selfplay/learner.py`（collect→train_value→make_value_fn）。self-play で val_mse<baseline 学習
+- [x] `agent/mcts.py`：`value_fn` で葉評価を NN 置換可（既定はヒューリスティック＝バンドル安全）
+- [x] `league/pfsp.py`＋`league/league.py`（PFSP 重み・ModelPool 雛形）
+- [x] `tests/test_learn.py`: 5/5 PASS（ValueNet 学習・NN誘導MCTS合法・PFSP・pool）
+- [x] コミット＆プッシュ
+
+### 発展課題（今後）
+- [ ] NN を pure-python forward に書き出し submission へ（value-guided 提出）
+- [ ] policy ターゲット（visit-count π）収集 ＋ policy head（PUCT 化）
+- [ ] リーグ自己対戦の本格運用（main/exploiter・定期リセット）
+- [ ] 本番ラダー A/B（μ で採否、PLAN 方針）
+- [ ] Playwright ブラウザ目視（egress 許可 or ローカルで）
 
 ---
 
