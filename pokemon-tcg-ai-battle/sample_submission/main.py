@@ -1,8 +1,9 @@
 import os
-import random
 
-from cg.api import to_observation_class
+from agent.base import random_agent
+from agent.mcts import make_mcts_agent
 from agent.safety import safe_agent
+from agent.time_budget import reset_global
 
 
 def read_deck_csv() -> list[int]:
@@ -23,21 +24,19 @@ def read_deck_csv() -> list[int]:
     raise FileNotFoundError("deck.csv not found in: " + ", ".join(candidates))
 
 
-def _agent_impl(obs_dict: dict) -> list[int]:
-    """Baseline policy (Phase 0): return the deck at setup, else a random legal move.
+# Determinized-search policy (PIMC). Bundled inside the submission; degrades to a
+# random legal move if the Search API is unavailable. Time-capped per move.
+_search_agent = make_mcts_agent(deadline_s=0.2, max_sims=64, base_agent=random_agent,
+                                use_global_budget=True)
 
-    Intentionally minimal. It is wrapped by ``safe_agent`` below, which guarantees
-    a legal, non-crashing return value even if this function misbehaves or raises.
-    """
-    obs = to_observation_class(obs_dict)
-    if obs.select is None:
-        # Initial deck selection: return 60 card IDs.
+
+def _agent_impl(obs_dict: dict) -> list[int]:
+    if obs_dict.get("select") is None:
+        # Initial deck-selection phase: reset the per-match time budget and
+        # return the 60-card deck.
+        reset_global(600.0)
         return read_deck_csv()
-    n = len(obs.select.option)
-    k = obs.select.maxCount
-    if n <= 0 or k <= 0:
-        return []
-    return random.sample(range(n), min(k, n))
+    return _search_agent(obs_dict)
 
 
 # The exported agent. ``safe_agent`` enforces "never crash, always legal".

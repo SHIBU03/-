@@ -4,8 +4,9 @@
 > **各コミットの直後にこのファイルを更新する**。再開時はまずこのファイルを読むこと。
 
 最終更新: 2026-06-20 / 作業ブランチ: `claude/nifty-albattani-4mgg7m`
-**現在地**: Sprint 0（0A/0B/可視化）＋ **Sprint 1（高速自己対戦基盤）完了**。
-Playwright ブラウザ目視のみ環境制約で保留（chromium が egress 403）。次は **Sprint 2（決定化探索 PIMC→ISMCTS）**。
+**現在地**: Sprint 0（0A/0B/可視化）＋ Sprint 1 ＋ **Sprint 2（決定化探索 PIMC）完了**。
+提出 agent は探索ベース（dev/本番 env 双方で search 動作、対 random ~81%、最大手番 ~93ms）。
+次は **Sprint 3（学習＋リーグ）**。Playwright ブラウザ目視のみ環境制約で保留。
 
 ---
 
@@ -78,9 +79,19 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 - [x] `tests/test_selfplay.py`: 5/5 PASS。並列40ゲーム crashes=0、単コア ~113 games/sec
 - [x] コミット＆プッシュ
 
-### Sprint 2〜3
-- [ ] Sprint 2: 決定化探索（`agent/determinize.py`・`agent/mcts.py`・`agent/time_budget.py`）
-- [ ] Sprint 3: 学習＋リーグ（`selfplay/learner.py`・`model/network.py`・`league/`）
+### Sprint 2 — 決定化探索（PIMC）✅ 完了
+- [x] `sample_submission/agent/base.py`（バンドル安全な read_deck/random_agent、env非依存）
+- [x] `sample_submission/agent/determinize.py`（hidden info を決定化、count 整合）
+- [x] `sample_submission/agent/time_budget.py`（600s 予算・手番 soft deadline）
+- [x] `sample_submission/agent/mcts.py`（UCB1 フラットMC×決定化、search_begin 前向きモデル）
+- [x] `sample_submission/main.py`: 提出 agent を MCTS 化（safe_agent ＋ 予算リセット）
+- [x] `tests/test_search.py`: 4/4 PASS（対 random 81%）。本番 env でも search 動作（sb_ok 全件）
+- [x] バグ修正: repo直下 `agent/` 衝突を解消（`sample_submission/agent/` に集約）
+- [x] コミット＆プッシュ
+
+### Sprint 3 — 学習＋リーグ（次）
+- [ ] `model/network.py`（軽量 value/policy）・`selfplay/learner.py`（replay から学習）
+- [ ] `league/`＋PFSP（main/exploiter）、NN で探索の事前確率/葉評価を置換
 - 参照: `docs/PLAN_v1.2.md` §6 / `PLAN_v1.1.md`
 
 ---

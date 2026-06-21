@@ -32,11 +32,11 @@ def main():
     s = _post("/api/start", {"seed": 1})
     assert s.get("active_game"), s
     for _ in range(5):
-        s = _post("/api/step", {"agent": "main"})
+        s = _post("/api/step", {"agent": "random"})
     print("interactive: turn=%s result=%s" % (s.get("turn"), s.get("result")))
 
-    # 2) auto-run gate
-    r = _post("/api/auto", {"n_games": N, "seed": 0, "agent": "main"})
+    # 2) auto-run gate (random agent: fast, agent-agnostic crash/leak check)
+    r = _post("/api/auto", {"n_games": N, "seed": 0, "agent": "random"})
     assert r.get("started"), r
     while True:
         time.sleep(0.5)
