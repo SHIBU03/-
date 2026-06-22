@@ -4,12 +4,10 @@
 > **各コミットの直後にこのファイルを更新する**。再開時はまずこのファイルを読むこと。
 
 最終更新: 2026-06-20 / 作業ブランチ: `claude/nifty-albattani-4mgg7m`
-**現在地**: Sprint 0〜3 すべて完了（仮想空間の5層が一通り動作）。テスト 20/20 PASS。
-提出 agent=決定化探索（dev/本番env で search 動作、対 random ~81%）。value net は self-play から
-学習（val_mse<baseline）し NN誘導MCTS に接続可。リーグ/PFSP 雛形あり。
-Playwright ブラウザ目視のみ環境制約で保留（chromium egress 403）。
-**次の発展**: NN のバンドル安全化（pure-python forward）＋ value-guided 提出、リーグ自己対戦の本格運用、
-本番ラダー A/B（PLAN 方針）。
+**現在地**: Sprint 0〜3 完了（仮想空間5層）＋ **Phase D1 完了＝デッキ自動探索 QD（MAP-Elites）**。
+テスト全緑（lifecycle/selfplay/search/learn/discovery）。`python -m discovery.run_qd` で
+デッキ発見・新カード発掘・再開が動作。PC学習手順は `docs/TRAINING.md`。
+**次の発展**: Phase D2 コンボ学習（card2vec/シナジー）→ D3 共進化 → D4 サロゲート＋並列。
 
 ---
 
@@ -101,7 +99,20 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 - [x] `tests/test_learn.py`: 5/5 PASS（ValueNet 学習・NN誘導MCTS合法・PFSP・pool）
 - [x] コミット＆プッシュ
 
-### 発展課題（今後）
+### Phase D1 — デッキ自動探索（QD / MAP-Elites）✅ 完了
+- [x] `discovery/descriptors.py`（BC: #Pokémon/#Energy/#ex）
+- [x] `discovery/archive.py`（MAP-Elites grid・elite保持・save/load・resume）
+- [x] `discovery/variation.py`（合法カード入替・探索/活用・crossover）
+- [x] `discovery/evaluate.py`（MCTSで操作しPFSP相手分布への勝率）
+- [x] `discovery/run_qd.py`（CLI・毎世代checkpoint・--resume・summary/best_deck出力）
+- [x] `tests/test_discovery.py`: 5/5 PASS。CLI 実走で被覆増＋新カード発掘を確認
+- [x] PC学習手順 `docs/TRAINING.md`
+- [x] コミット＆プッシュ
+
+### 発展課題（今後 / Phase D2–D4 ほか）
+- [ ] D2: card2vec＋シナジー誘導変異（コンボ学習）、発見コンボのレポート
+- [ ] D3: デッキ⇄エージェント共進化（`discovery/coevolve.py`、PFSP相手分布）
+- [ ] D4: 深層サロゲート（DSA-ME）＋並列QD評価（プロセス分離）
 - [ ] NN を pure-python forward に書き出し submission へ（value-guided 提出）
 - [ ] policy ターゲット（visit-count π）収集 ＋ policy head（PUCT 化）
 - [ ] リーグ自己対戦の本格運用（main/exploiter・定期リセット）

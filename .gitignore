@@ -12,3 +12,8 @@ venv/
 submission.tar.gz
 game_replay.html
 *_replay.html
+
+# Training / discovery run outputs
+runs/
+*.value.json
+value.json
