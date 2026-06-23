@@ -4,6 +4,12 @@ from agent.base import random_agent
 from agent.mcts import make_mcts_agent
 from agent.safety import safe_agent
 from agent.time_budget import reset_global
+from agent.value_net import make_value_fn
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+# Optional learned value network (pure-python, no numpy). Falls back to the
+# heuristic leaf eval when value.json is absent.
+_VALUE_FN = make_value_fn(os.path.join(_HERE, "value.json"))
 
 
 def read_deck_csv() -> list[int]:
@@ -27,7 +33,7 @@ def read_deck_csv() -> list[int]:
 # Determinized-search policy (PIMC). Bundled inside the submission; degrades to a
 # random legal move if the Search API is unavailable. Time-capped per move.
 _search_agent = make_mcts_agent(deadline_s=0.2, max_sims=64, base_agent=random_agent,
-                                use_global_budget=True)
+                                use_global_budget=True, value_fn=_VALUE_FN)
 
 
 def _agent_impl(obs_dict: dict) -> list[int]:

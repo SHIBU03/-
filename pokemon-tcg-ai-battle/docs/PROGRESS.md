@@ -7,7 +7,7 @@
 **現在地**: Sprint 0〜3 ＋ **Phase D1（QDデッキ探索）＋ D2（コンボ/シナジー学習）完了**。
 テスト全緑（lifecycle/selfplay/search/learn/discovery/synergy）。`python -m discovery.run_qd` で
 デッキ発見・新カード発掘・**発見コンボ出力**・再開が動作。PC学習手順は `docs/TRAINING.md`。
-**次**: 提出 value-guided 化 → D3 共進化 → D4 サロゲート＋並列（計画ファイル「★実装計画」）。
+**次**: D3 共進化 → D4 サロゲート＋並列（計画ファイル「★実装計画」）。提出 value-guided 化は完了。
 
 ---
 
@@ -117,8 +117,14 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 - [x] `tests/test_synergy.py`: 4/4 PASS。実走でコンボ出力確認（Vibrava+Maximum Belt 等）
 - [x] コミット＆プッシュ
 
+### 提出 value-guided 化 ✅ 完了
+- [x] `sample_submission/agent/features_py.py`（pure-python 特徴量、model/features と一致をテスト）
+- [x] `sample_submission/agent/value_net.py`（JSON重みの pure-python forward、`make_value_fn`）
+- [x] `main.py`：`value.json` があれば value-guided MCTS、無ければ heuristic（numpy非依存維持）
+- [x] `tools/make_submission.sh`：`value.json` を同梱
+- [x] `tests/test_value_submission.py` 4/4（特徴量一致・py≈numpy・合法・numpy-free）、E2E スモークOK
+
 ### 発展課題（今後 / 計画ファイル「★実装計画」参照）
-- [ ] 提出 value-guided 化（`agent/features_py.py`＋`value_net.py` pure-python、main で value.json 使用）
 - [ ] D3: デッキ⇄エージェント共進化（`discovery/coevolve.py`、PFSP相手分布）
 - [ ] D4: 深層サロゲート（DSA-ME）＋並列QD評価（プロセス分離）
 - [ ] policy ターゲット（visit-count π）収集 ＋ policy head（PUCT 化）
