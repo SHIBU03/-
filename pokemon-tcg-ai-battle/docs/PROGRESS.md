@@ -4,10 +4,10 @@
 > **各コミットの直後にこのファイルを更新する**。再開時はまずこのファイルを読むこと。
 
 最終更新: 2026-06-20 / 作業ブランチ: `claude/nifty-albattani-4mgg7m`
-**現在地**: Sprint 0〜3 完了（仮想空間5層）＋ **Phase D1 完了＝デッキ自動探索 QD（MAP-Elites）**。
-テスト全緑（lifecycle/selfplay/search/learn/discovery）。`python -m discovery.run_qd` で
-デッキ発見・新カード発掘・再開が動作。PC学習手順は `docs/TRAINING.md`。
-**次の発展**: Phase D2 コンボ学習（card2vec/シナジー）→ D3 共進化 → D4 サロゲート＋並列。
+**現在地**: Sprint 0〜3 ＋ **Phase D1（QDデッキ探索）＋ D2（コンボ/シナジー学習）完了**。
+テスト全緑（lifecycle/selfplay/search/learn/discovery/synergy）。`python -m discovery.run_qd` で
+デッキ発見・新カード発掘・**発見コンボ出力**・再開が動作。PC学習手順は `docs/TRAINING.md`。
+**次**: 提出 value-guided 化 → D3 共進化 → D4 サロゲート＋並列（計画ファイル「★実装計画」）。
 
 ---
 
@@ -109,11 +109,18 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 - [x] PC学習手順 `docs/TRAINING.md`
 - [x] コミット＆プッシュ
 
-### 発展課題（今後 / Phase D2–D4 ほか）
-- [ ] D2: card2vec＋シナジー誘導変異（コンボ学習）、発見コンボのレポート
+### Phase D2 — コンボ/シナジー学習 ✅ 完了
+- [x] `discovery/embeddings.py`（card2vec: 共起→PPMI→切断SVD, numpyのみ）
+- [x] `discovery/synergy.py`（ペア synergy lift・`synergy_adder` 誘導追加）
+- [x] `discovery/variation.py`：`mutate(..., p_syn, synergy_fn)` シナジー誘導
+- [x] `discovery/run_qd.py`：synergy 蓄積・card2vec 定期再学習・`summary.json` に discovered_combos
+- [x] `tests/test_synergy.py`: 4/4 PASS。実走でコンボ出力確認（Vibrava+Maximum Belt 等）
+- [x] コミット＆プッシュ
+
+### 発展課題（今後 / 計画ファイル「★実装計画」参照）
+- [ ] 提出 value-guided 化（`agent/features_py.py`＋`value_net.py` pure-python、main で value.json 使用）
 - [ ] D3: デッキ⇄エージェント共進化（`discovery/coevolve.py`、PFSP相手分布）
 - [ ] D4: 深層サロゲート（DSA-ME）＋並列QD評価（プロセス分離）
-- [ ] NN を pure-python forward に書き出し submission へ（value-guided 提出）
 - [ ] policy ターゲット（visit-count π）収集 ＋ policy head（PUCT 化）
 - [ ] リーグ自己対戦の本格運用（main/exploiter・定期リセット）
 - [ ] 本番ラダー A/B（μ で採否、PLAN 方針）

@@ -37,13 +37,18 @@ def is_playable(deck) -> bool:
     return has_basic and ace <= 1
 
 
-def mutate(deck, vocab, rng: random.Random, *, k_max=2, p_new=0.25, tries=25):
+def mutate(deck, vocab, rng: random.Random, *, k_max=2, p_new=0.25, p_syn=0.0,
+           synergy_fn=None, tries=25):
     pool = vocab if vocab else list(deck)
     for _ in range(tries):
         d = list(deck)
         for _ in range(rng.randint(1, k_max)):
             d.pop(rng.randrange(len(d)))
-            if rng.random() < p_new:
+            u = rng.random()
+            if synergy_fn is not None and u < p_syn:
+                c = synergy_fn(d, rng)                   # combo: synergy-guided add
+                d.append(c if c is not None else rng.choice(pool))
+            elif u < p_syn + p_new:
                 d.append(rng.choice(ALL_IDS))           # explore: any legal card
             else:
                 d.append(rng.choice(pool))              # exploit: known-viable card

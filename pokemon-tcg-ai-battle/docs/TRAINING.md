@@ -27,11 +27,12 @@ python -m discovery.run_qd --generations 50 --pilot random --n-games 2 --out run
 ```
 
 **主なオプション**: `--generations N` 世代数 / `--pilot mcts|random` 操作AI / `--n-games` 1評価の試合数 /
-`--k-opp` 相手フィールドの数（archive から PFSP 的にサンプル＋シード） / `--resume`。
+`--k-opp` 相手フィールドの数（archive から PFSP 的にサンプル＋シード） / `--p-syn` シナジー誘導入替の確率
+（コンボ学習, 既定0.3） / `--emb-every` card2vec 再学習間隔 / `--resume`。
 
 **出力（`--out` 配下）**:
 - `archive.json` … MAP-Elites アーカイブ（再開に使用）
-- `summary.json` … 被覆数・最良適応度・**発見した新カード一覧**・上位ニッチ
+- `summary.json` … 被覆数・最良適応度・**発見した新カード一覧**・**発見コンボ（synergy lift 上位ペア）**・上位ニッチ
 - `best_deck.csv` … 現時点の最強デッキ（60枚）
 
 **仕組み**: ニッチ＝行動記述子 BC（#Pokémon・#Energy・#ex〔単/多プライズ〕）。
