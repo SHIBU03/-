@@ -3,11 +3,12 @@
 > このファイルは「トークンが切れても作業を途中から再開できる」ためのもの。
 > **各コミットの直後にこのファイルを更新する**。再開時はまずこのファイルを読むこと。
 
-最終更新: 2026-06-20 / 作業ブランチ: `claude/nifty-albattani-4mgg7m`
-**現在地**: Sprint 0〜3 ＋ **Phase D1（QDデッキ探索）＋ D2（コンボ/シナジー学習）完了**。
-テスト全緑（lifecycle/selfplay/search/learn/discovery/synergy）。`python -m discovery.run_qd` で
-デッキ発見・新カード発掘・**発見コンボ出力**・再開が動作。PC学習手順は `docs/TRAINING.md`。
-**次**: D4 サロゲート＋並列（計画ファイル「★実装計画」）。提出 value-guided 化・D3 共進化は完了。
+最終更新: 2026-06-21 / 作業ブランチ: `claude/nifty-albattani-4mgg7m`
+**現在地**: Sprint 0〜3 ＋ **Phase D 全完了**（D1 QD探索 / D2 コンボ・シナジー / 提出value-guided /
+D3 共進化 / D4 サロゲート＋並列）。テスト全緑（9ファイル: lifecycle/selfplay/search/learn/discovery/
+synergy/surrogate/value_submission/coevolve）。提出バンドルは numpy 非依存・スモーク合格。
+`python -m discovery.run_qd`（--surrogate/--workers/--p-syn）、`python -m discovery.coevolve` でPC学習可。
+**残課題**: 本番ラダー A/B（ローカルは代理指標, `docs/PLAN_v1.1.md` 方針）、長時間学習の実走チューニング。
 
 ---
 

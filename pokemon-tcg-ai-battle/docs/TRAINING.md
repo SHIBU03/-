@@ -28,7 +28,9 @@ python -m discovery.run_qd --generations 50 --pilot random --n-games 2 --out run
 
 **主なオプション**: `--generations N` 世代数 / `--pilot mcts|random` 操作AI / `--n-games` 1評価の試合数 /
 `--k-opp` 相手フィールドの数（archive から PFSP 的にサンプル＋シード） / `--p-syn` シナジー誘導入替の確率
-（コンボ学習, 既定0.3） / `--emb-every` card2vec 再学習間隔 / `--resume`。
+（コンボ学習, 既定0.3） / `--emb-every` card2vec 再学習間隔 / `--batch` 1世代の候補数 /
+`--workers K` 並列評価プロセス数（spawn・多コア活用） / `--surrogate`＋`--screen-k` DSA-ME サロゲート選別 /
+`--value-path value.json` value-guided 操作AI / `--resume`。
 
 **出力（`--out` 配下）**:
 - `archive.json` … MAP-Elites アーカイブ（再開に使用）
@@ -83,11 +85,14 @@ python -m discovery.coevolve --iters 1 --pilot random --selfplay-games 30 \
 ## 3. スケール/運用のヒント
 - 速度は **MCTS の `max_sims`/`deadline` と `--n-games`** で調整（質↔速度）。
 - 長時間運用は `--resume` で安全に再開（毎世代チェックポイント）。
-- 多コア活用の**並列 QD 評価**は今後追加予定（現状は serial。`selfplay/actor` のプロセス分離方式を流用）。
+- 多コア活用の**並列 QD 評価**は実装済み: `--batch B --workers K`（spawn でプロセス分離、libcg 安全）。
+  さらに `--surrogate --screen-k k` で DSA-ME サロゲート選別（高コスト実評価を上位 k に限定）。
 - 強さの最終判断は**本番ラダー A/B**（ローカル勝率は代理指標。`docs/PLAN_v1.1.md` 方針）。
 
-## 4. ロードマップ（Phase D）
-- **D1（実装済）**: QD でデッキ発見（archive/変異/評価/CLI/再開）。
-- D2: カード埋め込み（card2vec）＋シナジー誘導変異＝**コンボ学習**。
-- D3: デッキ⇄エージェント**共進化**（PFSP 相手分布）。
-- D4: 深層サロゲート（DSA-ME）で評価コスト削減＋並列化。
+## 4. ロードマップ（Phase D）— 全実装済 ✅
+- **D1**: QD でデッキ発見（archive/変異/評価/CLI/再開）。
+- **D2**: カード埋め込み（card2vec）＋シナジー誘導変異＝**コンボ学習**（summary に発見コンボ）。
+- **提出 value-guided**: 学習 value net を pure-python 化し提出 MCTS の葉評価へ（numpy 非依存）。
+- **D3**: デッキ⇄エージェント**共進化**（`discovery/coevolve.py`、PFSP 相手分布）。
+- **D4**: 深層サロゲート（DSA-ME）＋ spawn 並列評価（`--surrogate`/`--workers`）。
+- 次: 本番ラダー A/B と長時間学習の実走チューニング。

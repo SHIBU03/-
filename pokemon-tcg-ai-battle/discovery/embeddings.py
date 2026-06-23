@@ -1,9 +1,8 @@
-"""card2vec: card embeddings learned from decklists (no gensim).
+"""card2vec: card embeddings learned from decklists (co-occurrence -> PPMI -> SVD).
 
-Co-occurrence within decks -> PPMI -> truncated SVD (numpy only). Cards that
-appear together in good decks end up close in vector space, which lets us
-propose synergistic swaps and surface combos. The corpus grows as the QD
-archive fills, so embeddings are retrained periodically.
+Pure numpy (no gensim). Cards that appear together in good decks end up close in
+embedding space, which seeds combo discovery and synergy-guided mutation. The
+corpus grows as the QD archive fills, so embeddings are retrained periodically.
 """
 from __future__ import annotations
 
@@ -24,6 +23,10 @@ class CardEmbeddings:
     def has(self, card) -> bool:
         return card in self.index
 
+    def vec(self, card):
+        i = self.index.get(card)
+        return self.V[i] if i is not None else None
+
     def nearest(self, card, k=5):
         i = self.index.get(card)
         if i is None:
@@ -42,8 +45,9 @@ class CardEmbeddings:
         return float((self.V[idxs] @ self.V[i]).mean())
 
 
-def train_card2vec(corpus, dim=32, min_count=1, max_vocab=800):
-    """corpus: iterable of decks (each a list of card ids). Returns CardEmbeddings or None."""
+def train_card2vec(corpus, *, dim=32, min_count=1, max_vocab=800):
+    """corpus: iterable of decks (each a list of card IDs). Returns CardEmbeddings
+    or None if there is not enough data."""
     corpus = [list(d) for d in corpus]
     counts = Counter()
     for deck in corpus:
@@ -52,9 +56,9 @@ def train_card2vec(corpus, dim=32, min_count=1, max_vocab=800):
     if len(vocab) < 4 or len(corpus) < 3:
         return None
     idx = {c: i for i, c in enumerate(vocab)}
-    V = len(vocab)
-    co = np.zeros((V, V), dtype=np.float64)
-    uni = np.zeros(V, dtype=np.float64)
+    n = len(vocab)
+    co = np.zeros((n, n), dtype=np.float64)
+    uni = np.zeros(n, dtype=np.float64)
     for deck in corpus:
         present = [c for c in set(deck) if c in idx]
         for c in present:
@@ -71,10 +75,10 @@ def train_card2vec(corpus, dim=32, min_count=1, max_vocab=800):
     with np.errstate(divide="ignore", invalid="ignore"):
         pmi = np.log((pij / (np.outer(pi, pi) + 1e-12)) + 1e-12)
     ppmi = np.maximum(pmi, 0.0)
-    d = min(dim, V - 1)
+    d = min(dim, n - 1)
     try:
         U, S, _ = np.linalg.svd(ppmi)
     except np.linalg.LinAlgError:
         return None
     emb = U[:, :d] * np.sqrt(S[:d])
-    return CardEmbeddings(vocab, emb)
+    return CardEmbeddings(vocab, emb.astype(np.float32))

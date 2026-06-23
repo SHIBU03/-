@@ -7,10 +7,12 @@ low-sim MCTS for real runs, random for fast tests.
 """
 from __future__ import annotations
 
+import multiprocessing as mp
 import random
 
 from env.game_api import play_one_game, random_agent
 from agent.mcts import make_mcts_agent
+from agent.value_net import make_value_fn
 
 
 def mcts_pilot_factory(max_sims=8, deadline_s=0.03):
@@ -19,6 +21,16 @@ def mcts_pilot_factory(max_sims=8, deadline_s=0.03):
 
 def random_pilot_factory():
     return lambda: random_agent
+
+
+def pilot_factory_from_cfg(cfg):
+    """Build a pilot factory from a picklable config (for parallel workers)."""
+    if cfg.get("pilot") == "random":
+        return lambda: random_agent
+    vfn = make_value_fn(cfg.get("value_path"))
+    ms = cfg.get("max_sims", 8)
+    dl = cfg.get("deadline", 0.03)
+    return lambda: make_mcts_agent(value_fn=vfn, max_sims=ms, deadline_s=dl, seed=0)
 
 
 def pfsp_opponent_sampler(k=3, eps=0.05):
@@ -59,3 +71,21 @@ def deck_fitness(deck, opponents, *, pilot_factory, n_games=6, seed=0) -> float:
         except Exception:
             pass                                  # crash-proof: count as loss
     return wins / n_games
+
+
+def _eval_worker(args):
+    """Top-level worker for spawn pool: evaluate one candidate deck."""
+    deck, opponents, cfg, n_games, seed = args
+    pf = pilot_factory_from_cfg(cfg)
+    return deck_fitness(deck, opponents, pilot_factory=pf, n_games=n_games, seed=seed)
+
+
+def parallel_eval(candidates, opponents, cfg, *, n_games=6, seed=0, workers=4):
+    """Evaluate candidate decks across spawned processes (libcg-safe)."""
+    if workers <= 1 or len(candidates) <= 1:
+        return [_eval_worker((d, opponents, cfg, n_games, seed + i))
+                for i, d in enumerate(candidates)]
+    args = [(d, opponents, cfg, n_games, seed + i) for i, d in enumerate(candidates)]
+    ctx = mp.get_context("spawn")
+    with ctx.Pool(min(workers, len(candidates)), maxtasksperchild=4) as pool:
+        return pool.map(_eval_worker, args)

@@ -19,10 +19,12 @@ import random
 
 from discovery.archive import Archive
 from discovery.descriptors import deck_stats, card_name
-from discovery.evaluate import deck_fitness, mcts_pilot_factory, random_pilot_factory
+from discovery.evaluate import (deck_fitness, mcts_pilot_factory,
+                                random_pilot_factory, parallel_eval)
 from discovery.variation import mutate, crossover, ALL_IDS
 from discovery.embeddings import train_card2vec
 from discovery.synergy import SynergyStats, synergy_adder
+from discovery.surrogate import DeckSurrogate
 from env.game_api import read_deck
 
 
@@ -34,15 +36,19 @@ def _opponents(archive, seed_deck, rng, k=3):
 
 def run(generations, out_dir, *, seed=0, pilot="mcts", n_games=6, k_opp=3,
         p_cross=0.2, p_syn=0.3, emb_every=30, checkpoint_every=10, resume=False,
-        pilot_factory=None, opponent_sampler=None):
+        pilot_factory=None, opponent_sampler=None,
+        batch=1, workers=1, surrogate=False, screen_k=None, value_path=None,
+        surrogate_every=10):
     os.makedirs(out_dir, exist_ok=True)
     arch_path = os.path.join(out_dir, "archive.json")
     rng = random.Random(seed)
     if pilot_factory is None:
         pilot_factory = mcts_pilot_factory() if pilot == "mcts" else random_pilot_factory()
+    cfg = {"pilot": pilot, "value_path": value_path}     # picklable for workers
     seed_deck = read_deck()
     stats = SynergyStats()
     emb = None
+    surro = DeckSurrogate() if surrogate else None
 
     if resume and os.path.exists(arch_path):
         archive = Archive.load(arch_path)
@@ -53,27 +59,45 @@ def run(generations, out_dir, *, seed=0, pilot="mcts", n_games=6, k_opp=3,
                           n_games=max(2, n_games // 2), seed=seed)
         archive.add(seed_deck, f0, deck_stats(seed_deck))
         stats.record(seed_deck, f0)
+        if surro is not None:
+            surro.add(seed_deck, f0)
         print(f"seeded: fitness={f0:.2f} coverage={archive.coverage()}")
 
+    ev = 0
     for g in range(generations):
         vocab = archive.vocabulary()
         if emb_every and g % emb_every == 0 and archive.coverage() >= 5:
             emb = train_card2vec([e["deck"] for e in archive.elites()]) or emb
         syn = synergy_adder(stats, emb, vocab, ALL_IDS)
-        p1 = archive.random_elite(rng)["deck"]
-        if rng.random() < p_cross and len(archive) > 1:
-            child = crossover(p1, archive.random_elite(rng)["deck"], rng)
-        else:
-            child = mutate(p1, vocab, rng, p_syn=p_syn, synergy_fn=syn)
+        cands = []
+        for _ in range(max(1, batch)):
+            p1 = archive.random_elite(rng)["deck"]
+            if rng.random() < p_cross and len(archive) > 1:
+                cands.append(crossover(p1, archive.random_elite(rng)["deck"], rng))
+            else:
+                cands.append(mutate(p1, vocab, rng, p_syn=p_syn, synergy_fn=syn))
+        if surro is not None and surro.ready() and screen_k:     # DSA-ME screening
+            cands = [cands[i] for i in surro.screen(cands, screen_k)]
         opps = (opponent_sampler(archive, seed_deck, rng) if opponent_sampler
                 else _opponents(archive, seed_deck, rng, k_opp))
-        fit = deck_fitness(child, opps, pilot_factory=pilot_factory,
-                           n_games=n_games, seed=seed + g + 1)
-        archive.add(child, fit, deck_stats(child))
-        stats.record(child, fit)
+        if workers > 1:
+            fits = parallel_eval(cands, opps, cfg, n_games=n_games,
+                                 seed=seed + ev + 1, workers=workers)
+        else:
+            fits = [deck_fitness(d, opps, pilot_factory=pilot_factory,
+                                 n_games=n_games, seed=seed + ev + i + 1)
+                    for i, d in enumerate(cands)]
+        for d, f in zip(cands, fits):
+            archive.add(d, f, deck_stats(d))
+            stats.record(d, f)
+            if surro is not None:
+                surro.add(d, f)
+            ev += 1
+        if surro is not None and g % surrogate_every == 0:
+            surro.fit()
         if g % 25 == 0:
             b = archive.best()
-            print(f"gen {g}: cov={archive.coverage()} childFit={fit:.2f} best={b['fitness']:.2f}")
+            print(f"gen {g}: cov={archive.coverage()} evals={ev} best={b['fitness']:.2f}")
         if (g + 1) % checkpoint_every == 0:
             archive.save(arch_path)
 
@@ -81,7 +105,7 @@ def run(generations, out_dir, *, seed=0, pilot="mcts", n_games=6, k_opp=3,
     _write_summary(archive, seed_deck, out_dir, stats)
     b = archive.best()
     print(f"DONE coverage={archive.coverage()} best_fitness={b['fitness']:.2f} "
-          f"combos={len(stats.top_pairs(15))}")
+          f"evals={ev} combos={len(stats.top_pairs(15))}")
     return archive
 
 
@@ -124,12 +148,18 @@ def main():
     ap.add_argument("--k-opp", type=int, default=3)
     ap.add_argument("--p-syn", type=float, default=0.3, help="prob. of synergy-guided swap")
     ap.add_argument("--emb-every", type=int, default=30, help="retrain card2vec every N gens")
+    ap.add_argument("--batch", type=int, default=1, help="candidates generated per generation")
+    ap.add_argument("--workers", type=int, default=1, help="parallel eval processes (spawn)")
+    ap.add_argument("--surrogate", action="store_true", help="DSA-ME surrogate screening")
+    ap.add_argument("--screen-k", type=int, default=None, help="real-eval only top-k of batch")
+    ap.add_argument("--value-path", default=None, help="value.json for value-guided pilot")
     ap.add_argument("--checkpoint-every", type=int, default=10)
     ap.add_argument("--resume", action="store_true")
     a = ap.parse_args()
     run(a.generations, a.out, seed=a.seed, pilot=a.pilot, n_games=a.n_games,
-        k_opp=a.k_opp, p_syn=a.p_syn, emb_every=a.emb_every,
-        checkpoint_every=a.checkpoint_every, resume=a.resume)
+        k_opp=a.k_opp, p_syn=a.p_syn, emb_every=a.emb_every, batch=a.batch,
+        workers=a.workers, surrogate=a.surrogate, screen_k=a.screen_k,
+        value_path=a.value_path, checkpoint_every=a.checkpoint_every, resume=a.resume)
 
 
 if __name__ == "__main__":
