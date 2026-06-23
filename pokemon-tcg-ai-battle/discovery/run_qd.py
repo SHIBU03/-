@@ -33,11 +33,13 @@ def _opponents(archive, seed_deck, rng, k=3):
 
 
 def run(generations, out_dir, *, seed=0, pilot="mcts", n_games=6, k_opp=3,
-        p_cross=0.2, p_syn=0.3, emb_every=30, checkpoint_every=10, resume=False):
+        p_cross=0.2, p_syn=0.3, emb_every=30, checkpoint_every=10, resume=False,
+        pilot_factory=None, opponent_sampler=None):
     os.makedirs(out_dir, exist_ok=True)
     arch_path = os.path.join(out_dir, "archive.json")
     rng = random.Random(seed)
-    pilot_factory = mcts_pilot_factory() if pilot == "mcts" else random_pilot_factory()
+    if pilot_factory is None:
+        pilot_factory = mcts_pilot_factory() if pilot == "mcts" else random_pilot_factory()
     seed_deck = read_deck()
     stats = SynergyStats()
     emb = None
@@ -63,8 +65,10 @@ def run(generations, out_dir, *, seed=0, pilot="mcts", n_games=6, k_opp=3,
             child = crossover(p1, archive.random_elite(rng)["deck"], rng)
         else:
             child = mutate(p1, vocab, rng, p_syn=p_syn, synergy_fn=syn)
-        fit = deck_fitness(child, _opponents(archive, seed_deck, rng, k_opp),
-                           pilot_factory=pilot_factory, n_games=n_games, seed=seed + g + 1)
+        opps = (opponent_sampler(archive, seed_deck, rng) if opponent_sampler
+                else _opponents(archive, seed_deck, rng, k_opp))
+        fit = deck_fitness(child, opps, pilot_factory=pilot_factory,
+                           n_games=n_games, seed=seed + g + 1)
         archive.add(child, fit, deck_stats(child))
         stats.record(child, fit)
         if g % 25 == 0:

@@ -66,6 +66,20 @@ PY
 
 ---
 
+## 2.5 デッキ⇄エージェント共進化（autocurriculum）
+
+デッキ(QD)と打ち手(value net)を交互に強化。相手は PFSP（強い elite を重み付け）。
+
+```bash
+python -m discovery.coevolve --iters 5 --gens-per-iter 60 --selfplay-games 100 --out runs/co1
+python -m discovery.coevolve --iters 5 --out runs/co1 --resume        # 続きから
+python -m discovery.coevolve --iters 1 --pilot random --selfplay-games 30 \
+    --gens-per-iter 6 --n-games 2 --out runs/cosmoke                  # 高速確認
+```
+出力（`--out` 配下）: `archive.json`（デッキ群）, `value.json`（学習 agent）, `summary.json`,
+`coevolve_state.json`（反復インデックス＝resume用）。学習した `value.json` を
+`sample_submission/` に置けば提出 agent が value-guided になる（`make_submission.sh` が同梱）。
+
 ## 3. スケール/運用のヒント
 - 速度は **MCTS の `max_sims`/`deadline` と `--n-games`** で調整（質↔速度）。
 - 長時間運用は `--resume` で安全に再開（毎世代チェックポイント）。

@@ -7,7 +7,7 @@
 **現在地**: Sprint 0〜3 ＋ **Phase D1（QDデッキ探索）＋ D2（コンボ/シナジー学習）完了**。
 テスト全緑（lifecycle/selfplay/search/learn/discovery/synergy）。`python -m discovery.run_qd` で
 デッキ発見・新カード発掘・**発見コンボ出力**・再開が動作。PC学習手順は `docs/TRAINING.md`。
-**次**: D3 共進化 → D4 サロゲート＋並列（計画ファイル「★実装計画」）。提出 value-guided 化は完了。
+**次**: D4 サロゲート＋並列（計画ファイル「★実装計画」）。提出 value-guided 化・D3 共進化は完了。
 
 ---
 
@@ -124,8 +124,14 @@ python3 tests/test_lifecycle.py        # 全 PASS で exit 0
 - [x] `tools/make_submission.sh`：`value.json` を同梱
 - [x] `tests/test_value_submission.py` 4/4（特徴量一致・py≈numpy・合法・numpy-free）、E2E スモークOK
 
+### Phase D3 — デッキ⇄エージェント共進化 ✅ 完了
+- [x] `discovery/evaluate.py`：`pfsp_opponent_sampler`（強い elite を重み付けサンプル）
+- [x] `discovery/run_qd.py`：`pilot_factory`/`opponent_sampler` 注入対応
+- [x] `discovery/coevolve.py`（CLI）：agent step（archive で self-play→value net）↔ deck step
+      （value-guided MCTS×PFSP で QD）を反復。`value.json`+`archive.json`+iter で resume
+- [x] `tests/test_coevolve.py` 3/3（学習 val_mse<baseline・archive 継続成長・resume）
+
 ### 発展課題（今後 / 計画ファイル「★実装計画」参照）
-- [ ] D3: デッキ⇄エージェント共進化（`discovery/coevolve.py`、PFSP相手分布）
 - [ ] D4: 深層サロゲート（DSA-ME）＋並列QD評価（プロセス分離）
 - [ ] policy ターゲット（visit-count π）収集 ＋ policy head（PUCT 化）
 - [ ] リーグ自己対戦の本格運用（main/exploiter・定期リセット）

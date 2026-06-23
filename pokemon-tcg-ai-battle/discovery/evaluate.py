@@ -21,6 +21,20 @@ def random_pilot_factory():
     return lambda: random_agent
 
 
+def pfsp_opponent_sampler(k=3, eps=0.05):
+    """Sample opponents from the archive weighted toward STRONG elites (face the
+    decks that matter), plus the seed deck. PFSP-flavored (cf. league/pfsp)."""
+    def sample(archive, seed_deck, rng):
+        elites = archive.elites()
+        if not elites:
+            return [seed_deck]
+        decks = [e["deck"] for e in elites]
+        weights = [max(e["fitness"], eps) for e in elites]
+        idx = rng.choices(range(len(decks)), weights=weights, k=min(k, len(decks)))
+        return [decks[i] for i in idx] + [seed_deck]
+    return sample
+
+
 def deck_fitness(deck, opponents, *, pilot_factory, n_games=6, seed=0) -> float:
     if not opponents:
         return 0.0
